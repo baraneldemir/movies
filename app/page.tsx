@@ -16,6 +16,8 @@ export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [watchedMovies, setWatchedMovies] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [addedMovieTitle, setAddedMovieTitle] = useState<string>(''); // Movie title for animation
+  const [addedMovieId, setAddedMovieId] = useState<number | null>(null); // Movie ID for animation
 
   // Load watched movies from localStorage on page load
   useEffect(() => {
@@ -45,10 +47,17 @@ export default function Home() {
     }
   };
 
-  // Add movie to watched list
-  const handleWatchMovie = (title: string) => {
+  // Add movie to watched list with animation
+  const handleWatchMovie = (title: string, id: number) => {
     if (!watchedMovies.includes(title)) {
       setWatchedMovies([...watchedMovies, title]);
+      setAddedMovieTitle(title);
+      setAddedMovieId(id);
+
+      // Remove added movie from animation state after 2 seconds
+      setTimeout(() => {
+        setAddedMovieId(null); // Clear animation after 2 seconds
+      }, 2000);
     }
   };
 
@@ -69,11 +78,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-blue-700 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-sky-900 flex flex-col md:flex-row">
       {/* Hamburger Menu for Small Screens */}
       <button
         onClick={toggleSidebar}
-        className="md:hidden p-4 text-white bg-sky-900 fixed top-4 left-4 z-40 rounded-full shadow-lg focus:outline-none"
+        className="md:hidden p-4 text-white bg-sky-900 fixed top-4 left-4 z-30 rounded-md shadow-lg focus:outline-none"
         aria-label="Toggle sidebar"
       >
         ☰
@@ -81,13 +90,13 @@ export default function Home() {
 
       {/* Sidebar */}
       <aside
-        className={`w-full sm:w-1/4 bg-gray-900 text-white p-4 max-h-screen overflow-y-auto fixed top-0 left-0 z-50 h-screen transition-transform ease-in-out duration-300 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:static`}
+        className={`w-64 h-full bg-gray-900 text-white p-4 overflow-y-auto fixed top-0 left-0 z-40 transition-transform duration-300 ease-in-out 
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          md:static md:h-screen md:translate-x-0 md:w-1/4`}
       >
         <button
           onClick={toggleSidebar}
-          className="absolute top-4 right-4 text-white text-2xl"
+          className="absolute top-4 right-4 text-white text-2xl md:hidden"
           aria-label="Close sidebar"
         >
           ×
@@ -97,7 +106,7 @@ export default function Home() {
         </h2>
         <button
           onClick={sortWatchedMovies}
-          className="mb-4 w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition"
+          className="mb-4 w-full bg-sky-900 text-white p-2 rounded-lg hover:bg-sky-950 transition"
         >
           Sort Alphabetically
         </button>
@@ -141,8 +150,10 @@ export default function Home() {
           {movies.map((movie) => (
             <li
               key={movie.id}
-              onClick={() => handleWatchMovie(movie.title)} // Add to watched list on click
-              className={`cursor-pointer p-4 text-black bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition flex gap-4`}
+              onClick={() => handleWatchMovie(movie.title, movie.id)} // Add to watched list on click
+              className={`cursor-pointer p-4 text-black bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition flex gap-4 relative ${
+                addedMovieId === movie.id ? 'bg-green-100' : ''
+              }`}
             >
               {/* Movie Poster */}
               {movie.poster_path && (
@@ -162,6 +173,13 @@ export default function Home() {
                   {movie.overview || 'No overview available.'}
                 </p>
               </div>
+
+              {/* Green Checkmark Overlay Animation */}
+              {addedMovieId === movie.id && (
+                <div className="absolute inset-0 bg-green-500 opacity-50 flex justify-center items-center text-white text-4xl font-bold animate-checkmark">
+                  ✔
+                </div>
+              )}
             </li>
           ))}
         </ul>
